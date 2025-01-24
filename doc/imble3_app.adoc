@@ -1,0 +1,118 @@
+# IMBLE3 インターフェーステストアプリ
+:toc:
+:toc-levels: 3
+:toc-title: 目次
+:nofooter:
+:sectnums:
+:abstract-caption: 概要
+:figure-caption: 図
+:table-caption: 表
+
+## 概要
+
+link:https://www.interplan.co.jp/solution/wireless/imble/imble3_family.php[IMBLE3]の
+以下のモードのデモを行うスマホアプリ +
+及びそれに付随する治具
+
+## ハードウェア要件
+
+### androidのバージョン
+Android7(API Level 24)以上とする。
+
+### iOSのバージョン
+
+[line-through]#iOS16.7以上とする。#
+
+将来対応とする。
+
+## 治具
+
+### 概要
+
+
+以下のモードについて
+入力と出力を知覚させる
+
+- 接点入力モード
+- 接点出力モード(プッシュ)
+- 接点出力モード(ホールド)
+- 接点入出力モード(プッシュ)
+- 接点入出力モード(ホールド)
+
+DIP SWとケーブルの接続を変更することで
+容易にモード変更に対応する
+
+### 外観
+
+image:images/apperence.jpg[]
+
+### 回路図
+
+image:schematic/imble3_signal_test.svg[]
+
+### モード切り替え
+
+モード切り替えは以下表の通り。
+
+.モード一覧
+[options="autowidth"]
+|===
+| モード | DIP SW(1,2,3) | ケーブル 
+
+| 接点入力モード | ON,OFF,ON | J4-J5(上) を接続
+| 接点出力モード(プッシュ) | ON,ON,OFF | J4-J7(下) を接続
+| 接点出力モード(ホールド) | OFF,ON,OFF| J4-J7(下) を接続 
+| 接点入出力モード(プッシュ) | ON,OFF,OFF | J4-J6(中) を接続
+| 接点入出力モード(ホールド) | OFF,OFF,OFF | J4-J6(中) を接続
+|===
+
+### 入力スイッチ
+
+接点入力モードの場合
+ボタンの配置は以下となる
+
+[options="autowidth"]
+|===
+| 1 | 2
+| 3 | 4
+|===
+
+接点入出力モードの場合
+ボタンの配置は以下となる
+
+[options="autowidth"]
+|===
+| - | - 
+| 1 | 2
+|===
+### 出力LED
+
+接点入出力モードの場合
+LEDの配置は以下となる
+
+[options="autowidth"]
+|===
+| 3 | 4
+| - | - 
+|===
+
+接点出力モードの場合
+LEDの配置は以下となる
+
+[options="autowidth"]
+|===
+| 1 | 2
+| 3 | 4
+|===
+
+## アプリ
+
+### 機能概要
+
+- IMBLE3を探索し、表示する
+- 指定したIMBLE3に接続する
+- 接続済みのIMBLE3に対して、4入力の表示及び4出力の選択(以降入出力)が可能な画面を表示する
+- 入出力の画面にて送信ボタンが押されると選択済みの4出力に対応したデータをIMBLE3に送信する
+- IMBLE3からの送信内容をモニタし、4入力の表示を行う
+- 接続済みのIMBLE3に対して切断が可能
+
