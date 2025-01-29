@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, NativeEventEmitter, NativeModules } from "react-native"
+import { View, ImageBackground, Dimensions, Image, Text, TouchableOpacity, StyleSheet, NativeEventEmitter, NativeModules } from "react-native"
 import { useNavigation, useGlobalSearchParams } from 'expo-router';
 
 import { useEffect, useState } from "react";
@@ -11,7 +11,16 @@ export default function DeviceScreen() {
     const [mode, setMode] = useState("io")
     const [volt, setVolt] = useState(0)
     const [data, setData] = useState([false, false])
+    const [isToggled, setIsToggled] = useState(false)
+    const [aspectRatio, setAspectRatio] = useState(1)
 
+    const BG_IMAGE = require('../assets/images/bg.jpg')
+    const screenWidth = Dimensions.get('window').width
+    const image = Image.resolveAssetSource(BG_IMAGE)
+
+    const handleToggle = () => {
+        setIsToggled(!isToggled)
+    }
     const strConnectionState = (val) => {
         return val ? "Connect" : "Disconnect"
     }
@@ -38,7 +47,6 @@ export default function DeviceScreen() {
 
     useEffect(() => {
         connect(true)
-
         const eventEmitter = new NativeEventEmitter(NativeModules.DeviceFound)
         const eventListener = eventEmitter.addListener('DEVICE_FOUND', event => {
             if (event && event.json) {
@@ -52,10 +60,15 @@ export default function DeviceScreen() {
                 if (result.data && result.data.length >= 2) {
                     console.log("data:" + result.data)
                     const switch_data = toSwitch(result.data)
-                    setData(switch_data.slice(-2))
+                    console.log("sw data:" + switch_data)
+                    setData(switch_data.slice(0, 2))
+                } else if (result.volt && result.volt.length >= 4) {
+                    const volt_value = parseInt(result.volt, 16)
+                    setVolt(((3 * volt_value) / 65535).toFixed(2))
                 }
             }
         })
+        setAspectRatio(image.height / image.width)
         return () => {
             eventListener.remove()
             ble.disconnect(address)
@@ -70,60 +83,91 @@ export default function DeviceScreen() {
     send_data = (index) => {
         if (0 <= index && index <= 3) {
             const s = (1 << index).toString(16).padStart(2, '0');
-            ble.send_data(s);
+            ble.send_data("05000000" + s);
         }
+    }
+
+    const getButtonStr = (val) => {
+        return val ? '押された' : ''
     }
 
     return (
         <>
-            <Text>{name}</Text>
-            <Text>{address}</Text>
-            <View style={styles.button_frame}>
-                <TouchableOpacity onPress={() => { connect(true) }} style={[
-                    styles.button,
-                    connection_state && styles.button_disabled,
-                ]}>
-                    <Text>{strConnectionState(true)}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { connect(false) }} style={[
-                    styles.button,
-                    !connection_state && styles.button_disabled,
-                ]} >
+            <Image source={BG_IMAGE}
+                style={[styles.backgroundImage, { width: screenWidth, height: screenWidth * aspectRatio }]}
+                resizeMode="cover" />
+            <View style={styles.overlay}>
+                <View style={styles.button_frame}>
+                    <TouchableOpacity onPress={() => { connect(true) }} style={[
+                        styles.button,
+                        connection_state && styles.button_disabled,
+                    ]}>
+                        <Text>{strConnectionState(true)}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { connect(false) }} style={[
+                        styles.button,
+                        !connection_state && styles.button_disabled,
+                    ]} >
 
-                    <Text>{strConnectionState(false)}</Text>
-                </TouchableOpacity>
-            </View>
+                        <Text>{strConnectionState(false)}</Text>
+                    </TouchableOpacity>
+                </View>
 
-            <Text>{"電圧:" + volt + "v"}</Text>
-
-            <View style={styles.switch_container}>
-                {data.map((value, index) => (
-                    <View key={index} style={styles.box}>
-                        <Text style={styles.text}>{"sample:" + value}</Text>
+                <View style={styles.toggle_container}>
+                    <TouchableOpacity
+                        style={[styles.switch, isToggled ? styles.toggledOn : styles.toggledOff]}
+                        onPress={handleToggle}
+                    >
+                        <View style={[styles.toggleCircle, isToggled ? styles.circleOn : styles.circleOff]} />
+                    </TouchableOpacity>
+                    <Text style={styles.label}>{isToggled ? 'A/D mode' : 'I/O mode'}</Text>
+                </View>
+                <View style={[styles.ad_frame, !isToggled && { opacity: 0 }]} >
+                    <Text style={styles.ad_text}>{"電圧: " + volt + "v"}</Text>
+                </View>
+                <View style={[styles.io_frame, isToggled && { opacity: 0 }]}>
+                    <View style={styles.switch_container}>
+                        {data.map((value, index) => (
+                            <View key={index} style={[styles.box, !value && { opacity: 0 }]}>
+                                <Text style={styles.sw_text}>押された</Text>
+                            </View>
+                        ))}
                     </View>
-                ))}
-            </View>
 
-            <Text>{"doko?"}</Text>
-            <TouchableOpacity onPress={() => { send_data(2) }} >
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => { send_data(3) }} >
-            </TouchableOpacity>
+                    <View style={styles.led_frame}>
+                        <TouchableOpacity onPress={() => { send_data(0) }} style={styles.led_button}>
+                            <Text style={styles.led_text}>{"押すたびに\nLEDのON/OFFが切り替わります"}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => { send_data(1) }} style={styles.led_button}>
+                            <Text style={styles.led_text}>{"押すたびに\nLEDのON/OFFが切り替わります"}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View >
         </>
     )
 }
 const styles = StyleSheet.create({
+    backgroundImage: {
+        ...StyleSheet.absoluteFillObject,
+        marginTop: 80,
+    },
+    overlay: {
+        flex: 1,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+    },
     container: {
         flex: 1,
     },
     button: {
-        backgroundColor: '#ccc', // ボタンの背景色
+        backgroundColor: '#ccc',
         paddingVertical: 20,
         paddingHorizontal: 30,
         borderRadius: 10,
-        elevation: 8, // Android用の立体感
+        elevation: 8,
         shadowColor: '#000',
-        shadowOffset: { width: 2, height: 4 }, // iOS用の立体感
+        shadowOffset: { width: 2, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 10,
         borderColor: '#888',
@@ -147,22 +191,105 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: '#f2f2f2', // 背景色
     },
+    toggle_container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 10,
+        marginBottom: 10,
+        paddingLeft: 30,
+    },
     switch_container: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        padding: 16,
+        alignItems: 'center',
+        minHeight: '26%',
+    },
+    switch: {
+        width: 70,
+        height: 30,
+        borderRadius: 30,
+        padding: 5,
+        backgroundColor: '#ccc',
+        marginRight: 10,
+    },
+    toggledOn: {
+        backgroundColor: '#e74c3c',
+    },
+    toggledOff: {
+        backgroundColor: '#4cd137',
+    },
+    toggleCircle: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: 'white',
+    },
+    circleOn: {
+        marginLeft: 40,
+    },
+    circleOff: {
+        marginLeft: 0,
+    },
+    label: {
+        fontSize: 18,
+        backgroundColor: '#ffffff99',
+    },
+    ad_frame: {
+        width: '80%',
+        paddingTop: '10%',
+        paddingBottom: '10%',
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        borderRadius: 8,
+        alignSelf: 'center',
+    },
+    ad_text: {
+        color: '#fff',
+        fontSize: 40,
+        alignSelf: 'center',
+    },
+    io_frame: {
+        width: '80%',
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        borderRadius: 16,
+        alignSelf: 'center',
     },
     box: {
-        width: 100,
-        height: 100,
-        justifyContent: 'center',
-        alignItems: 'center',
+        width: '40%',
+        height: '70%',
         borderColor: '#000',
         borderRadius: 8,
+        backgroundColor: '#191970',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginHorizontal: 5,
     },
-    text: {
+    sw_text: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    led_frame: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: 10,
+        minHeight: '20%',
+    },
+    led_button: {
+        backgroundColor: 'rgba(255,100,100,0.8)',
+        width: '50%',
+        height: '70%',
+        borderColor: '#000',
+        borderRadius: 8,
+        justifyContent: 'center',
+        paddingLeft: '5%',
+        paddingRight: '5%',
+        alignItems: 'center',
+        marginHorizontal: 5,
+    },
+    led_text: {
+        color: '#fff',
+        fontSize: 24,
         fontWeight: 'bold',
     },
 })

@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import com.facebook.react.bridge.Arguments
 
-import com.facebook.react.bridge.Callback
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.modules.core.DeviceEventManagerModule
 
@@ -65,8 +64,8 @@ class BLEModule(reactContext: ReactApplicationContext?) : NativeBLESpec(reactCon
 
     @SuppressLint("MissingPermission")
     override fun connect(address: String?) {
-        val d = foundedDevices.get(address)
-        dlog("addr:" + address + " dev:" + d)
+        val d = foundedDevices[address]
+        dlog("address:$address dev:$d")
         lastConnected = address
         if (d != null) {
             manager.connect(d, this)
@@ -79,9 +78,10 @@ class BLEModule(reactContext: ReactApplicationContext?) : NativeBLESpec(reactCon
 
     override fun send_data(s: String?) {
         val data: ByteArray = Misc.s2b(s)
-        if (data.isNotEmpty())
+        if (data.isNotEmpty()) {
             manager.sendData(data)
-        else
+            dlog("data:$data")
+        } else
             dlog("empty data -> $s")
     }
 
@@ -98,7 +98,7 @@ class BLEModule(reactContext: ReactApplicationContext?) : NativeBLESpec(reactCon
         val params = Arguments.createMap()
         params.putString("json", data)
 
-        val context = ContextHolder.getContext()
+        val context = ContextHolder.context
         val module = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
 
         if (module == null) {
@@ -123,8 +123,13 @@ class BLEModule(reactContext: ReactApplicationContext?) : NativeBLESpec(reactCon
         val obj = deviceToJson(d)
         obj.put("connect", true)
         if (data[0] == 0x5.toByte()) {
-            val dataStr = String.format("%02x", data[4]);
+            val dataStr = String.format("%02x", data[4])
             obj.put("data", dataStr)
+            val json = obj.toString()
+            sendEvent(json)
+        } else if (data[0] == 0xb.toByte()) {
+            val dataStr = String.format("%02x%02x", data[5], data[4])
+            obj.put("volt", dataStr)
             val json = obj.toString()
             sendEvent(json)
         } else {

@@ -12,6 +12,7 @@ const ble = {
         NativeBLE?.stop_scan()
     },
     send_data: async(s) => {
+        console.log("send_data " + s)
         NativeBLE?.send_data(s)
     },
     connect: async(addr) => {

@@ -52,7 +52,7 @@ class BLEManager(private val context: Context) {
                     dlog("address:${device.address} uuid:$uuid")
                     if (isImBleUuid(uuid)) {
                         imble = true
-                        break;
+                        break
                     }
                 }
                 if (imble) {
@@ -141,13 +141,13 @@ class BLEManager(private val context: Context) {
                                 }
                                 dlog("notify set")
                             }
-                            dlog("read found:" + service.uuid)
+                            dlog("read found:" + char.uuid)
                         } else if (char.uuid.equals(UUID.fromString(UuidList.CHAR_WRITE))
                             || char.uuid.equals(UUID.fromString(UuidList.CHAR_WRITE2))
                             || char.uuid.equals(UUID.fromString(UuidList.CHAR_WRITE3))
                         ) {
                             writeCharacteristic = char
-                            dlog("write found:" + service.uuid)
+                            dlog("write found:" + char.uuid)
                         }
                     }
                 }
@@ -168,7 +168,7 @@ class BLEManager(private val context: Context) {
                 characteristic: BluetoothGattCharacteristic?,
                 status: Int
             ) {
-                dlog("")
+                dlog("to $characteristic st:$status")
             }
 
             override fun onCharacteristicChanged(
@@ -194,13 +194,6 @@ class BLEManager(private val context: Context) {
     fun sendData(
         data: ByteArray,
     ) {
-//        val characteristic = writeCharacteristic
-//
-//        if (characteristic != null) {
-//            characteristic.value = data
-//            val success = bluetoothGatt?.writeCharacteristic(characteristic) ?: false
-//            dlog("" + success)
-//        }
         val characteristic = writeCharacteristic
 
         if (characteristic != null) {

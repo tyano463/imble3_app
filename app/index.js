@@ -101,7 +101,6 @@ export default function HomeScreen() {
   }
   return (
     <View>
-      <Text>{"data:" + debug_data}</Text>
       <View style={styles.button_frame}>
         <TouchableOpacity onPress={() => { startScan(true) }} disabled={scan} style={[
           styles.button,
