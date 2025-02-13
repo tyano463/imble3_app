@@ -3,6 +3,7 @@ import { useNavigation, useGlobalSearchParams } from 'expo-router';
 
 import { useEffect, useState } from "react";
 import ble from "./ble";
+import * as D from './definitions'
 
 export default function DeviceScreen() {
     const { address, name } = useGlobalSearchParams();
@@ -14,7 +15,7 @@ export default function DeviceScreen() {
     const [isToggled, setIsToggled] = useState(false)
     const [aspectRatio, setAspectRatio] = useState(1)
 
-    const BG_IMAGE = require('../assets/images/bg.jpg')
+    const BG_IMAGE = require('../assets/images/bg.png')
     const screenWidth = Dimensions.get('window').width
     const image = Image.resolveAssetSource(BG_IMAGE)
 
@@ -88,7 +89,7 @@ export default function DeviceScreen() {
     }
 
     const getButtonStr = (val) => {
-        return val ? '押された' : ''
+        return val ? D.MESSAGE_BUTTON_PUSSHED : ''
     }
 
     return (
@@ -113,6 +114,9 @@ export default function DeviceScreen() {
                     </TouchableOpacity>
                 </View>
 
+                <View style={[styles.ad_frame, !isToggled && { opacity: 0 }]} >
+                    <Text style={styles.ad_text}>{"電圧: " + volt + "v"}</Text>
+                </View>
                 <View style={styles.toggle_container}>
                     <TouchableOpacity
                         style={[styles.switch, isToggled ? styles.toggledOn : styles.toggledOff]}
@@ -122,25 +126,26 @@ export default function DeviceScreen() {
                     </TouchableOpacity>
                     <Text style={styles.label}>{isToggled ? 'A/D mode' : 'I/O mode'}</Text>
                 </View>
-                <View style={[styles.ad_frame, !isToggled && { opacity: 0 }]} >
-                    <Text style={styles.ad_text}>{"電圧: " + volt + "v"}</Text>
-                </View>
                 <View style={[styles.io_frame, isToggled && { opacity: 0 }]}>
-                    <View style={styles.switch_container}>
-                        {data.map((value, index) => (
-                            <View key={index} style={[styles.box, !value && { opacity: 0 }]}>
-                                <Text style={styles.sw_text}>押された</Text>
-                            </View>
-                        ))}
-                    </View>
+
 
                     <View style={styles.led_frame}>
                         <TouchableOpacity onPress={() => { send_data(0) }} style={styles.led_button}>
-                            <Text style={styles.led_text}>{"押すたびに\nLEDのON/OFFが切り替わります"}</Text>
+                            <Text style={styles.led_text}>{D.MESSAGE_TAP_SUGGEST}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => { send_data(1) }} style={styles.led_button}>
-                            <Text style={styles.led_text}>{"押すたびに\nLEDのON/OFFが切り替わります"}</Text>
+                            <Text style={styles.led_text}>{D.MESSAGE_TAP_SUGGEST}</Text>
                         </TouchableOpacity>
+                    </View>
+                    <View style={styles.switch_container}>
+                        <View style={[styles.box, { opacity: 0 }]} >
+                            <Text style={[styles.sw_text, { opacity: 0 }]} >{D.MESSAGE_BUTTON_PUSSHED}</Text>
+                        </View>
+                        {data.map((value, index) => (
+                            <View key={index} style={[styles.box, !value && { opacity: 0 }]}>
+                                <Text style={styles.sw_text}>{D.MESSAGE_BUTTON_PUSSHED}</Text>
+                            </View>
+                        ))}
                     </View>
                 </View>
             </View >
@@ -198,16 +203,19 @@ const styles = StyleSheet.create({
         marginTop: 10,
         marginBottom: 10,
         paddingLeft: 30,
+        height: '10%',
     },
     switch_container: {
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
-        minHeight: '26%',
+        height: '40%',
+        position: 'absolute',
+        marginTop: '30%',
     },
     switch: {
-        width: 70,
-        height: 30,
+        width: 30,
+        height: 70,
         borderRadius: 30,
         padding: 5,
         backgroundColor: '#ccc',
@@ -226,10 +234,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
     },
     circleOn: {
-        marginLeft: 40,
+        marginTop: 0,
     },
     circleOff: {
-        marginLeft: 0,
+        marginTop: 40,
     },
     label: {
         fontSize: 18,
@@ -237,8 +245,8 @@ const styles = StyleSheet.create({
     },
     ad_frame: {
         width: '80%',
-        paddingTop: '10%',
-        paddingBottom: '10%',
+        height: '10%',
+        marginTop: '58%',
         backgroundColor: 'rgba(255, 255, 255, 0.3)',
         borderRadius: 8,
         alignSelf: 'center',
@@ -255,7 +263,7 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     box: {
-        width: '40%',
+        width: '30%',
         height: '70%',
         borderColor: '#000',
         borderRadius: 8,
@@ -273,7 +281,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         padding: 10,
-        minHeight: '20%',
+        height: '46%',
+        marginLeft: '20%',
     },
     led_button: {
         backgroundColor: 'rgba(255,100,100,0.8)',
