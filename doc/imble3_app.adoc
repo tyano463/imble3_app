@@ -138,7 +138,7 @@ image::images/mtp.png[width="180"]
 
 <<<
 
-### インストール
+#### インストール
 . Filesアプリを開きDownloadディレクトリを開きます。
 +
 image::images/download.png[width="180"]

@@ -15,6 +15,7 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.os.Build
 import android.os.ParcelUuid
+import androidx.annotation.RequiresApi
 import com.yano.interplan.imble3_app.DLog.dlog
 import java.util.UUID
 
@@ -171,13 +172,26 @@ class BLEManager(private val context: Context) {
                 dlog("to $characteristic st:$status")
             }
 
+            @RequiresApi(Build.VERSION_CODES.TIRAMISU)
             override fun onCharacteristicChanged(
                 gatt: BluetoothGatt,
                 characteristic: BluetoothGattCharacteristic,
                 value: ByteArray
             ) {
                 dlog("" + value)
-                mConnectionCallback?.onReceived(value)
+                if (value != null)
+                    mConnectionCallback?.onReceived(value)
+            }
+
+            override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+                val value = characteristic.value
+                dlog("" + value)
+                if (value != null)
+                    mConnectionCallback?.onReceived(value)
+            }
+
+            override fun onDescriptorWrite(gatt: BluetoothGatt , descriptor:BluetoothGattDescriptor, status:Int) {
+                dlog("status:$status")
             }
         })
     }
